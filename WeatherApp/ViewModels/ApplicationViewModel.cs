@@ -196,8 +196,12 @@ namespace WeatherApp.ViewModels
                 saveFileDialog = new VistaSaveFileDialog();
                 saveFileDialog.Filter = "Json file|*.json|All files|*.*";
                 saveFileDialog.DefaultExt = "json";
-                saveFileDialog.ShowDialog();
-                Filename = saveFileDialog.FileName;
+                saveFileDialog.FileName = "temperatures.json";
+                if(saveFileDialog.ShowDialog() == true)
+                {
+                    Filename = saveFileDialog.FileName;
+                }
+
                 saveToFile();
             }
 
@@ -229,10 +233,6 @@ namespace WeatherApp.ViewModels
             /// Écrire dans le fichier
             /// Fermer le fichier   
             /// 
-
-            if (string.IsNullOrEmpty(Filename))
-                throw new NullReferenceException($"{nameof(Filename)} property is empty or null");
-
 
             using (var tw = new StreamWriter(Filename, false))
             {
