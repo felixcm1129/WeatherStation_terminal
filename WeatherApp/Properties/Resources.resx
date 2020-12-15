@@ -159,7 +159,7 @@
 Would you like to restart?</value>
   </data>
   <data name="wn_title" xml:space="preserve">
-    <value>My weather station</value>
+    <value>My Weather station</value>
   </data>
   <data name="wn_warning" xml:space="preserve">
     <value>Warning!</value>

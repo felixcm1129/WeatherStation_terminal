@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:WeatherApp"
         xmlns:views="clr-namespace:WeatherApp.Views"
         xmlns:models="clr-namespace:WeatherApp.ViewModels"
+        xmlns:p="clr-namespace:WeatherApp.Properties"
         mc:Ignorable="d"
-        Title="My Weather Station" Height="450" Width="400">
+        Title="{x:Static p:Resources.wn_title}" Height="450" Width="400">
     <Window.Resources>
         <DataTemplate DataType="{x:Type models:TemperatureViewModel}">
             <views:TemperatureView/>
@@ -24,11 +25,17 @@
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="File">
+            <MenuItem Header="{x:Static p:Resources.mi_file}">
                 <MenuItem Header="Weather Station" Command="{Binding ChangePageCommand}" CommandParameter="TemperatureViewModel"/>
-                <MenuItem Header="Preferences..." Command="{Binding ChangePageCommand}" CommandParameter="ConfigurationViewModel"/>
+                <MenuItem Header="{x:Static p:Resources.mi_preferences}" Command="{Binding ChangePageCommand}" CommandParameter="ConfigurationViewModel"/>
                 <Separator />
                 <!-- TODO 10 : Ajouter Importer et exporter -->
+                <MenuItem Header="{x:Static p:Resources.mi_import}" Command="{Binding ImportCommand}"/>
+                <MenuItem Header="{x:Static p:Resources.mi_export}" Command="{Binding ExportCommand}"/>
+            </MenuItem>
+            <MenuItem Header="{x:Static p:Resources.mi_language}">
+                <MenuItem Header="Français" Command="{Binding ChangeLanguageCommand}" CommandParameter="fr"/>
+                <MenuItem Header="English" Command="{Binding ChangeLanguageCommand}" CommandParameter="en"/>
             </MenuItem>
         </Menu>
         <ContentControl Content="{Binding CurrentViewModel}"/>

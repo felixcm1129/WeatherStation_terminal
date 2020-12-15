@@ -5,17 +5,38 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WeatherApp.Views"
              xmlns:models="clr-namespace:WeatherApp.Models"
+             xmlns:p="clr-namespace:WeatherApp.Properties"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="400">
     <DockPanel>
         <ToolBar DockPanel.Dock="Top">
-            <TextBlock Text="City : "/>
+            <TextBlock Text="{x:Static p:Resources.lbl_city}"/>
             <TextBox Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" Width="250"/>
         </ToolBar>
-        <Button DockPanel.Dock="Top" Content="Get Data" Command="{Binding GetTempCommand}"/>
+        <Button DockPanel.Dock="Top" Content="{x:Static p:Resources.btn_getData}" Command="{Binding GetTempCommand}"/>
         <!-- TODO 01b : Ajouter la ListView qui est liée avec la collection de Temperatures -->
         <!-- Voir la solution 14_pratique_examen, projet : demo_listView -->
-        <ListView/>
+        <ListView ItemsSource="{Binding Temperatures}">
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:TemperatureModel}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static p:Resources.lbl_city}"/>
+                            <TextBlock Text="{Binding City,UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static p:Resources.lbl_dataTime}"/>
+                            <TextBlock Text="{Binding DateTime,UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static p:Resources.lbl_temperature}"/>
+                            <TextBlock Text="{Binding Temperature,UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <!--<TextBlock Text="{Binding RawText}"/>-->
 
     </DockPanel>
 </UserControl>

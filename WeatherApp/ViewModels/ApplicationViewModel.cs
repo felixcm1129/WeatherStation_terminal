@@ -1,8 +1,14 @@
-﻿using Ookii.Dialogs.Wpf;
+﻿using Newtonsoft.Json;
+using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Windows;
 using WeatherApp.Commands;
+using WeatherApp.Models;
 using WeatherApp.Services;
 
 namespace WeatherApp.ViewModels
@@ -13,6 +19,7 @@ namespace WeatherApp.ViewModels
 
         private BaseViewModel currentViewModel;
         private List<BaseViewModel> viewModels;
+        private ObservableCollection<TemperatureModel> listTemperatures;
         private TemperatureViewModel tvm;
         private OpenWeatherService ows;
         private string filename;
@@ -29,7 +36,8 @@ namespace WeatherApp.ViewModels
         public BaseViewModel CurrentViewModel
         {
             get { return currentViewModel; }
-            set { 
+            set
+            {
                 currentViewModel = value;
                 OnPropertyChanged();
             }
@@ -58,22 +66,38 @@ namespace WeatherApp.ViewModels
         /// <summary>
         /// TODO 02 : Ajouter ImportCommand
         /// </summary>
+        public DelegateCommand<string> ImportCommand { get; set; }
 
         /// <summary>
         /// TODO 02 : Ajouter ExportCommand
         /// </summary>
-
+        public DelegateCommand<string> ExportCommand { get; set; }
         /// <summary>
         /// TODO 13a : Ajouter ChangeLanguageCommand
         /// </summary>
-
+        public DelegateCommand<string> ChangeLanguageCommand { get; set; }
 
         public List<BaseViewModel> ViewModels
         {
-            get {
+            get
+            {
                 if (viewModels == null)
                     viewModels = new List<BaseViewModel>();
-                return viewModels; 
+                return viewModels;
+            }
+        }
+
+        public ObservableCollection<TemperatureModel> ListTemperatures
+        {
+            get 
+            {
+                if (listTemperatures == null)
+                    listTemperatures = new ObservableCollection<TemperatureModel>();
+                return listTemperatures;
+            }
+            set 
+            {
+                listTemperatures = value;
             }
         }
         #endregion
@@ -84,12 +108,15 @@ namespace WeatherApp.ViewModels
 
             /// TODO 06 : Instancier ExportCommand qui doit appeler la méthode Export
             /// Ne peut s'exécuter que la méthode CanExport retourne vrai
-
+            ExportCommand = new DelegateCommand<string>(Export, CanExport);
             /// TODO 03 : Instancier ImportCommand qui doit appeler la méthode Import
+            ImportCommand = new DelegateCommand<string>(Import);
 
             /// TODO 13b : Instancier ChangeLanguageCommand qui doit appeler la méthode ChangeLanguage
+            ChangeLanguageCommand = new DelegateCommand<string>(ChangeLanguage);
 
-            initViewModels();          
+
+            initViewModels();
 
             CurrentViewModel = ViewModels[0];
 
@@ -111,14 +138,15 @@ namespace WeatherApp.ViewModels
             if (string.IsNullOrEmpty(Properties.Settings.Default.apiKey) && apiKey == "")
             {
                 tvm.RawText = "Aucune clé API, veuillez la configurer";
-            } else
+            }
+            else
             {
                 if (apiKey == "")
                     apiKey = Properties.Settings.Default.apiKey;
 
                 ows = new OpenWeatherService(apiKey);
             }
-                
+
             tvm.SetTemperatureService(ows);
             ViewModels.Add(tvm);
 
@@ -129,17 +157,17 @@ namespace WeatherApp.ViewModels
 
 
         private void ChangePage(string pageName)
-        {            
+        {
             if (CurrentViewModel is ConfigurationViewModel)
             {
                 ows.SetApiKey(Properties.Settings.Default.apiKey);
 
                 var vm = (TemperatureViewModel)ViewModels.FirstOrDefault(x => x.Name == typeof(TemperatureViewModel).Name);
                 if (vm.TemperatureService == null)
-                    vm.SetTemperatureService(ows);                
+                    vm.SetTemperatureService(ows);
             }
 
-            CurrentViewModel = ViewModels.FirstOrDefault(x => x.Name == pageName);  
+            CurrentViewModel = ViewModels.FirstOrDefault(x => x.Name == pageName);
         }
 
         /// <summary>
@@ -149,7 +177,11 @@ namespace WeatherApp.ViewModels
         /// <returns></returns>
         private bool CanExport(string obj)
         {
-            throw new NotImplementedException();
+            if (tvm.Temperatures != null)
+            {
+                return true;
+            }
+            else return false;
         }
 
         /// <summary>
@@ -164,6 +196,9 @@ namespace WeatherApp.ViewModels
                 saveFileDialog = new VistaSaveFileDialog();
                 saveFileDialog.Filter = "Json file|*.json|All files|*.*";
                 saveFileDialog.DefaultExt = "json";
+                saveFileDialog.ShowDialog();
+                Filename = saveFileDialog.FileName;
+                saveToFile();
             }
 
             /// TODO 08 : Code pour afficher la boîte de dialogue de sauvegarde
@@ -192,7 +227,19 @@ namespace WeatherApp.ViewModels
             /// Initilisation du StreamWriter
             /// Sérialiser la collection de températures
             /// Écrire dans le fichier
-            /// Fermer le fichier           
+            /// Fermer le fichier   
+            /// 
+
+            if (string.IsNullOrEmpty(Filename))
+                throw new NullReferenceException($"{nameof(Filename)} property is empty or null");
+
+
+            using (var tw = new StreamWriter(Filename, false))
+            {
+                var temps = JsonConvert.SerializeObject(tvm.Temperatures, Formatting.Indented);
+                tw.Write(temps);
+                tw.Close();
+            }
 
         }
 
@@ -211,17 +258,26 @@ namespace WeatherApp.ViewModels
             /// Lire le contenu du fichier
             /// Désérialiser dans un liste de TemperatureModel
             /// Remplacer le contenu de la collection de Temperatures avec la nouvelle liste
+            using (var sr = new StreamReader(Filename))
+            {
+                var fileContent = sr.ReadToEnd();
+
+                ListTemperatures = JsonConvert.DeserializeObject<ObservableCollection<TemperatureModel>>(fileContent);
+
+                tvm.Temperatures = ListTemperatures;
+            }
 
         }
 
         private void Import(string obj)
-        {
-            if (openFileDialog == null)
-            {
+        { 
                 openFileDialog = new VistaOpenFileDialog();
                 openFileDialog.Filter = "Json file|*.json|All files|*.*";
                 openFileDialog.DefaultExt = "json";
-            }
+                openFileDialog.ShowDialog();
+                Filename = openFileDialog.FileName;
+                openFromFile();
+            
 
             /// TODO 04 : Commande d'importation : Code pour afficher la boîte de dialogue
             /// Voir
@@ -235,11 +291,25 @@ namespace WeatherApp.ViewModels
 
         }
 
-        private void ChangeLanguage (string language)
+        private void ChangeLanguage(string language)
         {
-            /// TODO 13c : Compléter la méthode pour permettre de changer la langue
-            /// Ne pas oublier de demander à l'utilisateur de redémarrer l'application
-            /// Aide : ApiConsumerDemo
+
+            Properties.Settings.Default.Language = language;
+            Properties.Settings.Default.Save();
+
+            if (MessageBox.Show(
+                    Properties.Resources.msg_restart,
+                    Properties.Resources.wn_warning,
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                Restart();
+        }
+
+        void Restart()
+        {
+            var filename = Application.ResourceAssembly.Location;
+            var newFile = Path.ChangeExtension(filename, ".exe");
+            Process.Start(newFile);
+            Application.Current.Shutdown();
         }
 
         #endregion

@@ -17,8 +17,8 @@ namespace WeatherApp.ViewModels
 
         public DelegateCommand<string> GetTempCommand { get; set; }
 
-        public TemperatureModel CurrentTemp 
-        { 
+        public TemperatureModel CurrentTemp
+        {
             get => currentTemp;
             set
             {
@@ -33,7 +33,8 @@ namespace WeatherApp.ViewModels
         public ObservableCollection<TemperatureModel> Temperatures
         {
             get { return temperatures; }
-            set { 
+            set
+            {
                 temperatures = value;
                 OnPropertyChanged();
             }
@@ -57,8 +58,10 @@ namespace WeatherApp.ViewModels
 
         private string _rawText;
 
-        public string RawText {
-            get {
+        public string RawText
+        {
+            get
+            {
                 return _rawText;
             }
             set
@@ -66,7 +69,7 @@ namespace WeatherApp.ViewModels
                 _rawText = value;
                 OnPropertyChanged();
             }
-            
+
         }
 
         public TemperatureViewModel()
@@ -105,6 +108,14 @@ namespace WeatherApp.ViewModels
                 /// que celle que l'on vient de récupérer.
                 /// Utiliser la méthode Insert de la collection
 
+                if(Temperatures.Count > 0)
+                {
+                    if (CurrentTemp.DateTime != Temperatures[0].DateTime && CurrentTemp.City != Temperatures[0].City)
+                    {
+                        Temperatures.Insert(0, CurrentTemp);
+                    }
+                }
+                else Temperatures.Add(CurrentTemp);
                 Debug.WriteLine(CurrentTemp);
             }
         }
