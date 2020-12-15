@@ -177,7 +177,7 @@ namespace WeatherApp.ViewModels
         /// <returns></returns>
         private bool CanExport(string obj)
         {
-            if (tvm.Temperatures != null)
+            if (tvm.Temperatures.Count > 0)
             {
                 return true;
             }
